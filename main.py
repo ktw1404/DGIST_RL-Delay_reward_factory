@@ -177,6 +177,7 @@ def Deep_QN():
 
 def Double_DQN():
     # ENV setting
+    # 데이터 중 6월의 생산데이터를 통한 환경 설정
     product_list, time_table = factory.save_eval_data("06")
     env = factory.factory(product_list, time_table)
     
@@ -184,10 +185,12 @@ def Double_DQN():
     q = DDQN.Qnet(len(env.reset()), len(env.choice)).to('cuda')
     
     # Target network
+    # 학습의 안정성과 Target이 발산하지 않기 위한 network 조성 -> 각 method별로 network의 Loss가 의도대로 감소하지 않는다면, 수정할 필요있음.
     q_target = DDQN.Qnet(len(env.reset()), len(env.choice)).to('cuda')
     q_target.load_state_dict(q.state_dict())
     
     # Replay Buffer
+    # optimizer는 adam으로 설정 다른 것도 필요시 테스트
     memory = DDQN.ReplayBuffer()
     optimizer = DDQN.optim.Adam(q.parameters(), lr = DDQN.learning_rate)
     
@@ -230,11 +233,13 @@ def Double_DQN():
                 done_mask = 0.0 if done else 1.0
 
                 # Next action
+                # Last Machine이 아니면, 계속 action을 실행
                 if reward == 'A':
                     sp_queue.append(s_prime)
                     break
                 
                 # Produce Products
+                # Last Machine의 경우, 생산된 결과를 buffer에 저장하고 에이전트의 <s-a-... >쌍을 저장
                 else:
                     # Memorize
                     s_r, a_r = sa_queue.pop()
@@ -251,8 +256,8 @@ def Double_DQN():
             
             s = s_prime
             step_interval += 1
-            
-            # End of one epoch
+
+            # End of one epoch + epoch 별로 전체 학습단계 기록 Loss가 원하는 수준만큼 내려가지 않을경우 해당 출력으로 break 판단.
             if done:
                 production_time_list.append(env.now_time)
                 reward_list.append(score)    
@@ -271,9 +276,13 @@ def Double_DQN():
             loss_list.append(DDQN.train_long(q, q_target, memory, optimizer))
         
         # Update target Q network
+        # target을 업데이트하는 주기에 따라서 성능이 달라지는 확인해 봐야함. 현재 값 = 20
+        # 너무 크면 target이 실제 network의 학습방향을 따라가지 못할 수 있음.
         if n_epi % DDQN.update_interval == 0 and n_epi != 0:
             q_target.load_state_dict(q.state_dict())
 
+        # 학습 episode의 수가 매우 크기 때문에 가장 좋은 성능이 나온 때의 신경망을 저장할 필요가 있음
+        # best train 결과 저장을 위함.
         # Save model of highest reward
         if (high_score < score):
             high_score = score
@@ -317,6 +326,7 @@ def Double_DQN():
 
 def Dueling_DQN():
     # ENV setting
+    # 데이터 중 6월의 생산데이터를 통한 환경 설정
     product_list, time_table = factory.save_eval_data("06")
     env = factory.factory(product_list, time_table)
     
@@ -324,10 +334,12 @@ def Dueling_DQN():
     q = Duel_DQN.Qnet(len(env.reset()), len(env.choice)).to('cuda')
     
     # Target network
+    # 학습의 안정성과 Target이 발산하지 않기 위한 network조성 > 각 method별로 network의 Loss가 의도대로 감소하지 않는다면, 수정할 필요있음.
     q_target = Duel_DQN.Qnet(len(env.reset()), len(env.choice)).to('cuda')
     q_target.load_state_dict(q.state_dict())
     
     # Replay Buffer
+    # optimizer는 adam으로 설정. 다른 것도 필요시 테스트
     memory = Duel_DQN.ReplayBuffer()
     optimizer = Duel_DQN.optim.Adam(q.parameters(), lr = Duel_DQN.learning_rate)
     
@@ -371,11 +383,13 @@ def Dueling_DQN():
                 done_mask = 0.0 if done else 1.0
 
                 # Next action
+                # Last Machine이 아니면, 계속 action을 실행
                 if reward == 'A':
                     sp_queue.append(s_prime)
                     break
                 
                 # Produce Products
+                # Last Machine의 경우, 생산된 결과를 buffer에 저장하고 에이전트의 <s-a-... >쌍을 저장
                 else:
                     # Memorize
                     s_r, a_r = sa_queue.pop()
@@ -392,8 +406,8 @@ def Dueling_DQN():
             
             s = s_prime
             step_interval += 1
-            
-            # End of one epoch
+
+            # End of one epoch + epoch 별로 전체 학습단계 기록 Loss가 원하는 수준만큼 내려가지 않을경우 해당 출력으로 break 판단.
             if done:
                 production_time_list.append(env.now_time)
                 reward_list.append(score)    
@@ -406,67 +420,6 @@ def Dueling_DQN():
                         format(n_epi, env.now_time, np.average(production_time_list), 
                                env.lowest_time, score, high_score, epsilon * 100))
                 break
-        
-        # sa_queue = []
-        # sp_queue = []
-        
-        # # 1 STEP 
-        # while not done:
-        #     if env.total_stock() != 0:
-        #         # select action
-        #         a = q.sample_action(torch.from_numpy(s).float(), epsilon, env.choice, env.stock)
-        #         # save state and action
-        #         sa_queue.append([s, a])
-        #         # put products
-        #         env.put(env.choice[a][0][0], env.choice[a][0][1])
-            
-        #     reward_value = []
-        #     # Until next action
-        #     while True:
-        #         reward, done, s_prime = env.step()
-        #         done_mask = 0.0 if done else 1.0
-                
-        #         # Next action
-        #         if reward == 'A':
-        #             sp_queue.append(s_prime)
-        #             if len(reward_value) != 0:
-        #                 while len(sa_queue) != 0:
-        #                     # Memorize
-        #                     s_r, a_r = sa_queue.pop()
-        #                     transition = (s_r, a_r, np.average(reward_value), sp_queue.pop(), done_mask)
-        #                     score += np.average(reward_value)
-        #                     memory.put(transition)
-        #             break
-                
-        #         # Produce Products
-        #         else:
-        #             reward_value.append(reward)
-
-        #         if done:
-        #             break
-            
-        #     s = s_prime
-        #     step_interval += 1
-            
-        #     # End of one epoch
-        #     if done:
-        #         production_time_list.append(env.now_time)
-        #         reward_list.append(score)
-        #         if len(production_time_list) > 10:
-        #             print("Episode :{}, Current Time : {:.1f}, Average Time : {:.1f}, Lowest Time : {}, Score: {:1f}, High Score: {:1f} EPS : {:.1f}%".
-        #                 format(n_epi, env.now_time, np.average(production_time_list[-10:]), 
-        #                        env.lowest_time, score, high_score, epsilon * 100))
-        #         else:
-        #             print("Episode :{}, Current Time : {:.1f}, Average Time : {:.1f}, Lowest Time : {}, Score: {:1f}, High Score: {:1f} EPS : {:.1f}%".
-        #                 format(n_epi, env.now_time, np.average(production_time_list), 
-        #                        env.lowest_time, score, high_score, epsilon * 100))
-        #         break
-            
-            # Train : step interval
-            # if step_interval % Duel_DQN.train_interval == 0:
-            #     if memory.size() > 2000:
-            #         loss_list.append(Duel_DQN.train(q, q_target, memory, optimizer))
-                    # print("Step : ", step_interval, "Loss", loss_list[-1])
         
         # # Train : 1 episode
         if memory.size() > 2000:
