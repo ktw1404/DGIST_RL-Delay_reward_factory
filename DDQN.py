@@ -18,7 +18,7 @@ train_interval = 'episode original'
 update_interval = 20
 # ========================= Hyper Parameter ========================
 
-# ReplayBuffer
+# ReplayBuffer // 버퍼 내의 episode는 value와 무관하게 랜덤으로 추출
 class ReplayBuffer():
     def __init__(self):
         self.buffer = collections.deque(maxlen = buffer_limit)
@@ -59,6 +59,7 @@ class ReplayBuffer():
 class Qnet(nn.Module):
     def __init__(self, input, output):
         super(Qnet, self).__init__()
+        # Layer는 간단하게 linear 5개로 구성
         self.fc1 = nn.Linear(input, 1240)
         self.fc2 = nn.Linear(1240, 930)
         self.fc3 = nn.Linear(930, 610)
@@ -81,7 +82,7 @@ class Qnet(nn.Module):
         for i in range(len(x)):
             result.append((float(x[i])-float(y[i]))**2)
         return sum(result)
-    
+
     def sample_action(self, obs, epsilon, choice, stock):
         out = self.forward(obs)
         coin = random.random()
@@ -100,13 +101,13 @@ class Qnet(nn.Module):
         model_folder_path = 'Double_DQN_model/'
         file_name = os.path.join(model_folder_path, file_name)
         torch.save(self.state_dict(), file_name)
-        
+
+# 학습 함수를 둘로 나눔
+# Double DQN을 train할 때는 q_target을 추가
 def train(q, q_target, memory, optimizer):
     result = 0
-    # for i in range(10):
     s,a,r,s_prime,done_mask = memory.sample(batch_size)
-    
-    # Compute Q(s_t, a) - the model computes Q(s_t)
+
     q_a = q(s).gather(1,a)
 
     max_q_prime = q_target(s_prime).max(1)[0].unsqueeze(1)
@@ -122,6 +123,7 @@ def train(q, q_target, memory, optimizer):
         
     return result
 
+# Double DQN을 train할 때는 q_target을 추가
 def train_long(q, q_target, memory, optimizer):
     result = 0
     for i in range(10):
