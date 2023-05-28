@@ -17,7 +17,7 @@ train_interval = 'episode original'
 update_interval = 20
 # ========================= Hyper Parameter ========================
 
-# ReplayBuffer
+# ReplayBuffer // 버퍼 내의 episode는 value와 무관하게 랜덤으로 추출
 class ReplayBuffer():
     def __init__(self):
         self.buffer = collections.deque(maxlen = buffer_limit)
@@ -71,7 +71,8 @@ class Qnet(nn.Module):
         nn.ReLU(),
         nn.Linear(320, 320)
         )
-        
+
+        # 기존 Q-value를 state value와 advantage로 나누어 추정한 후 마지막에 합쳐 Q-value를 출력함.
         self.value_stream = nn.Sequential(
             nn.Linear(320, 128),
             nn.ReLU(),
@@ -84,6 +85,8 @@ class Qnet(nn.Module):
             nn.Linear(128, output)
         )
 
+    # Aggregation layer
+    # state value와 advantage를 특수하게 합쳐주는 역할
     def forward(self, x):
         x = torch.Tensor.clone(x).detach().to('cuda')
         features = self.dnn(x)
