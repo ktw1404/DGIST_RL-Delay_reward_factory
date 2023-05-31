@@ -23,7 +23,7 @@ class factory():
     def __init__(self, product_list_with_df, time_df):
         # ========================= Hyper Parameter ========================
         # 전체 생산 수량 낮춰주고 싶으면 조절
-        self.STOCK = 10
+        self.STOCK = 100
         # ========================= Hyper Parameter ========================
         
         # 제품 별 공정 시간 data을 sec 단위로 바꿔서 저장
@@ -45,7 +45,7 @@ class factory():
         self.buffer = self.set_buffer(product_list_with_df)
         
         # 최대 허용 buffer 수를 저장
-        self.maxbuffer = [3, 1, 2, 2, 2, 1, 2, 2, 1, 2, 2, 2, 2, 2, 2, 3, 2, 2, 5, sys.maxsize]
+        self.maxbuffer = [3, 1, 2, 2, 2, 1, 2, 2, 1, sys.maxsize]
         
         # line과 buffer를 합쳐서 line_state로 저장 : [[line], [buffer]]
         # line_state[0][0] ~ [19] : Line state ['E', 'T']
@@ -71,13 +71,13 @@ class factory():
         self.reward_opt = 1
         
         # 다운 타임 계산
-        self.down_time = [0 for i in range(20)]
+        self.down_time = [0 for i in range(10)]
         
         # starvation 타임 계산
-        self.starvation_time = [0 for i in range(20)]
+        self.starvation_time = [0 for i in range(10)]
         
         # blockage time 계산
-        self.blockage_time = [0 for i in range(20)]
+        self.blockage_time = [0 for i in range(10)]
         
         # poducts
         self.products = 0
@@ -85,11 +85,11 @@ class factory():
     # 리워드 계산 : #모델명, 패턴번호, patterned_df, 납입 시간, 출하 시간
     def cal_reward(self, model, pattern_idx, patterned_df, in_time, out_time, star_time, block_time):
         # 생산에 걸린 총 시간 (제품 출하 시각 - 제품 납입 시각) - 제품 생산에 필요한 시간 : 지연 시간
-        # additional_time = out_time - in_time - sum(self.model_vector(model, pattern_idx, patterned_df))
-        # return -1 * additional_time
+        additional_time = out_time - in_time - sum(self.model_vector(model, pattern_idx, patterned_df))
+        return -1 * additional_time
         
         # starvation + blockage
-        return 1000 - (star_time + block_time)
+        # return 1000 - (star_time + block_time)
         
         # Throughput
         # return self.products / self.now_time
@@ -213,8 +213,9 @@ class factory():
     def set_stock(self, df):
         stock_state_list = dict()
         for model_set in df:
-            stock_state_list[model_set[0]] = (model_set[1][19][5] // self.STOCK)
+            stock_state_list[model_set[0]] = (model_set[1][9][5] // self.STOCK)
             # stock_state_list[model_set[0]] = 20
+            
         return stock_state_list
     
     # Machine의 수 만큼 빈 buffer []를 만들어서 저장
@@ -259,7 +260,7 @@ class factory():
                 act = [machine_set[0], i]
                 cycle_time = []
                 # 각 machine의 cycle time 저장
-                machine_order = [0, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19 ,1, 2, 3, 4, 5, 6, 7, 8]
+                machine_order = [0, 9, 1, 2, 3, 4, 5, 6, 7, 8]
                 for idx in machine_order:
                     # Raw data Error: Solved
                     if (machine_set[1][idx][4] > 100):
@@ -287,7 +288,7 @@ class factory():
             # machine state is empty 0 * 20, 0
             if machine_idx[0] == 'E':
                 # cycle time of model is 0 * 20
-                for buffer_idx in range(20):
+                for buffer_idx in range(10):
                     state.append(0)
                 # time is 0
                 state.append(0)
@@ -328,7 +329,7 @@ class factory():
                         state.append(pattern_df[pattern][model_idx][1][d][4])
                 # 버퍼에 제품이 없을 시, cycle time이 0이라는 의미
                 else: 
-                    for d in range(20):
+                    for d in range(10):
                         state.append(0)
         return state
     
@@ -581,7 +582,7 @@ class factory():
             # machine state is empty 0 * 20, 0
             if machine_idx[0] == 'E':
                 # cycle time of model is 0 * 20
-                for buffer_idx in range(20):
+                for buffer_idx in range(10):
                     state.append(0)
                 # time is 0
                 state.append(0)
@@ -617,7 +618,7 @@ class factory():
                         state.append(pattern_df[pattern][model_idx][1][d][4])
                 # 버퍼에 제품이 없을 시, cycle time이 0이라는 의미
                 else: 
-                    for d in range(20):
+                    for d in range(10):
                         state.append(0)
         return state
     
@@ -628,9 +629,9 @@ class factory():
         self.line = self.set_line(self.df)
         self.buffer = self.set_buffer(self.df)
         self.line_state = self.set_line_state(self.line, self.buffer)
-        self.down_time = [0 for i in range(20)]
-        self.starvation_time = [0 for i in range(20)]
-        self.blockage_time = [0 for i in range(20)]
+        self.down_time = [0 for i in range(10)]
+        self.starvation_time = [0 for i in range(10)]
+        self.blockage_time = [0 for i in range(10)]
         self.now_time = 0 
         self.products = 0
         return np.array(self.state_maker(self.line_state, self.timer_list, self.patterned_df, self.maxbuffer)) 
@@ -642,9 +643,9 @@ class factory():
         self.line = self.set_line(self.df)
         self.buffer = self.set_buffer(self.df)
         self.line_state = self.set_line_state(self.line, self.buffer)
-        self.down_time = [0 for i in range(20)]
-        self.starvation_time = [0 for i in range(20)]
-        self.blockage_time = [0 for i in range(20)]
+        self.down_time = [0 for i in range(10)]
+        self.starvation_time = [0 for i in range(10)]
+        self.blockage_time = [0 for i in range(10)]
         self.now_time = 0 
         return np.array(self.state_maker_break(self.line_state, self.timer_list, self.patterned_df, self.maxbuffer))
     
@@ -686,7 +687,7 @@ def save_eval_data(month):
     for i in product_list_:
         save_list = []
         model_name = i[23:]
-        file_route = i + "/"+ model_name +".csv"
+        file_route = eval_dir + model_name
         save_list.append(i[22:])
         save_list.append(pd.read_csv(file_route, engine = 'python'))
         product_list.append(save_list)

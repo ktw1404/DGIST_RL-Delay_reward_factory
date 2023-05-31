@@ -1260,7 +1260,7 @@ def Graph_Log():
     block_list = []
     file_list_ = glob.glob(os.path.join(data_dir, "_blockage_time.txt"))
     for file_name in file_list_:
-        data = [[] for i in range(20)]
+        data = [[] for i in range(10)]
         file = open(file_name, "r")
         while True:
             line = file.readline()
@@ -1284,7 +1284,7 @@ def Graph_Log():
     starv_list = []
     file_list_ = glob.glob(os.path.join(data_dir, "_starvation_time.txt"))
     for file_name in file_list_:
-        data = [[] for i in range(20)]
+        data = [[] for i in range(10)]
         file = open(file_name, "r")
         while True:
             line = file.readline()
@@ -1305,7 +1305,7 @@ def Graph_Log():
         starv_list.append(data)
         file.close()
     print(starv_list[0])
-    machine_list = np.arange(20)
+    machine_list = np.arange(10)
     for idx in range(len(starv_list)):
         plt.bar(machine_list - 0.1*idx, starv_list[idx], label = idx, width = 0.1)
     # for graph in block_list:
@@ -1315,7 +1315,7 @@ def Graph_Log():
     plt.show()
 
 if __name__ == '__main__':
-    # Deep_QN()
+    Deep_QN()
     # Double_DQN()
     # Dueling_DQN()
     
@@ -1347,7 +1347,7 @@ if __name__ == '__main__':
     # Test(100, 'Double_DQN_model/',"model2_7164")
     # Test(100, 'Double_DQN_model/',"model2_6118")
     
-    Test(100, 'Dueling_DQN_model/',"model_8542")
+    # Test(100, 'Dueling_DQN_model/',"model_8542")
     # Test(100, 'Dueling_DQN_model/',"model_8166")
     # Test(100, 'Dueling_DQN_model/',"model2_7288")
     # Test(100, 'Dueling_DQN_model/',"model2_6766")
