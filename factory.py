@@ -23,7 +23,7 @@ class factory():
     def __init__(self, product_list_with_df, time_df):
         # ========================= Hyper Parameter ========================
         # 전체 생산 수량 낮춰주고 싶으면 조절
-        self.STOCK = 100
+        self.STOCK = 10
         # ========================= Hyper Parameter ========================
         
         # 제품 별 공정 시간 data을 sec 단위로 바꿔서 저장
@@ -86,7 +86,7 @@ class factory():
     def cal_reward(self, model, pattern_idx, patterned_df, in_time, out_time, star_time, block_time):
         # 생산에 걸린 총 시간 (제품 출하 시각 - 제품 납입 시각) - 제품 생산에 필요한 시간 : 지연 시간
         additional_time = out_time - in_time - sum(self.model_vector(model, pattern_idx, patterned_df))
-        return -1 * additional_time
+        return 1000 - additional_time
         
         # starvation + blockage
         # return 1000 - (star_time + block_time)
@@ -127,7 +127,7 @@ class factory():
         # 모델을 두 분류로 나눔
         for model_set in df:
             # 만일 #130의 평균 cycle time이 20이상인 경우
-            if model_set[1][4][4] > 20:
+            if model_set[1][3][4] > 20:
                 # 모델 명을 저장 
                 self.model_set_B.append(model_set[0])
             else:
@@ -140,57 +140,57 @@ class factory():
             if idx == 0:
                 for model_set in df_copied:
                     if model_set[0] in self.model_set_A:
-                        model_set[1][3][4] = 17
-                        model_set[1][4][4] = 7
-                        model_set[1][5][4] = 28
-                        model_set[1][6][4] = 6
+                        model_set[1][2][4] = 17
+                        model_set[1][3][4] = 7
+                        model_set[1][4][4] = 28
+                        model_set[1][5][4] = 6
                     else:
-                        model_set[1][3][4] = 34
-                        model_set[1][4][4] = 7
-                        model_set[1][5][4] = 31
-                        model_set[1][6][4] = 6
+                        model_set[1][2][4] = 34
+                        model_set[1][3][4] = 7
+                        model_set[1][4][4] = 31
+                        model_set[1][5][4] = 6
             
             # #120과 #150을 사용하는 경우
             elif idx == 1:
                 for model_set in df_copied:
                     if model_set[0] in self.model_set_A:
-                        model_set[1][3][4] = 17
-                        model_set[1][4][4] = 7
-                        model_set[1][5][4] = 0
-                        model_set[1][6][4] = 28
+                        model_set[1][2][4] = 17
+                        model_set[1][3][4] = 7
+                        model_set[1][4][4] = 0
+                        model_set[1][5][4] = 28
                     else:
-                        model_set[1][3][4] = 34
-                        model_set[1][4][4] = 7
-                        model_set[1][5][4] = 0
-                        model_set[1][6][4] = 31
+                        model_set[1][2][4] = 34
+                        model_set[1][3][4] = 7
+                        model_set[1][4][4] = 0
+                        model_set[1][5][4] = 31
             
             # #130과 #140 사용하는 경우
             elif idx == 2:
                 for model_set in df_copied:
                     if model_set[0] in self.model_set_A:
-                        model_set[1][3][4] = 0
-                        model_set[1][4][4] = 16
-                        model_set[1][5][4] = 28
-                        model_set[1][6][4] = 6
-                    else:
-                        model_set[1][3][4] = 0
+                        model_set[1][2][4] = 0
+                        model_set[1][3][4] = 16
                         model_set[1][4][4] = 28
-                        model_set[1][5][4] = 31
-                        model_set[1][6][4] = 6
+                        model_set[1][5][4] = 6
+                    else:
+                        model_set[1][2][4] = 0
+                        model_set[1][3][4] = 28
+                        model_set[1][4][4] = 31
+                        model_set[1][5][4] = 6
 
             # #130과 #150을 사용하는 경우
             elif idx == 3:
                 for model_set in df_copied:
                     if model_set[0] in self.model_set_A:
-                        model_set[1][3][4] = 0
-                        model_set[1][4][4] = 16
-                        model_set[1][5][4] = 0
-                        model_set[1][6][4] = 28
+                        model_set[1][2][4] = 0
+                        model_set[1][3][4] = 16
+                        model_set[1][4][4] = 0
+                        model_set[1][5][4] = 28
                     else:
-                        model_set[1][3][4] = 0
-                        model_set[1][4][4] = 28
-                        model_set[1][5][4] = 0
-                        model_set[1][6][4] = 31
+                        model_set[1][2][4] = 0
+                        model_set[1][3][4] = 28
+                        model_set[1][4][4] = 0
+                        model_set[1][5][4] = 31
 
             patterned_list.append(df_copied)
         return patterned_list
@@ -260,7 +260,7 @@ class factory():
                 act = [machine_set[0], i]
                 cycle_time = []
                 # 각 machine의 cycle time 저장
-                machine_order = [0, 9, 1, 2, 3, 4, 5, 6, 7, 8]
+                machine_order = [2, 3, 4, 5, 6, 7, 8, 9, 0, 1]
                 for idx in machine_order:
                     # Raw data Error: Solved
                     if (machine_set[1][idx][4] > 100):
