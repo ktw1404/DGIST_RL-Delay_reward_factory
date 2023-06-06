@@ -1,3 +1,5 @@
 ﻿# DGIST_RL-Delay_reward_factory 
 
-A Comparison of New Reinforcement Learning Algorithms Using Delayed Reward and previous algorithms
+Project for DGIST CSE402
+
+Objective  : A Comparison of New Reinforcement Learning Algorithms Using Delayed Reward and previous algorithms
